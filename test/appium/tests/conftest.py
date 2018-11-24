@@ -3,6 +3,7 @@ import pytest
 import re
 from _pytest.runner import runtestprotocol
 
+from support.api.jenkins_api import get_jenkins_build_url
 from support.device_stats_db import DeviceStatsDB
 from support.test_rerun import should_rerun_test
 from tests import test_suite_data, appium_container
@@ -155,14 +156,21 @@ def pytest_configure(config):
         test_suite_data.apk_name = ([i for i in [i for i in config.getoption('apk').split('/')
                                                  if '.apk' in i]])[0]
         if is_master(config):
+            pr_number = config.getoption('pr_number')
             if config.getoption('testrail_report'):
-                pr_number = config.getoption('pr_number')
                 if pr_number:
                     run_number = len(testrail_report.get_runs(pr_number)) + 1
                     run_name = 'PR-%s run #%s' % (pr_number, run_number)
                 else:
                     run_name = test_suite_data.apk_name
                 testrail_report.add_run(run_name)
+            if pr_number:
+                from github import Github
+                repo = Github(github_token).get_user('status-im').get_repo('status-react')
+                pull = repo.get_pull(int(pr_number))
+                pull.get_commits()[0].create_status(state='pending', context='Mobile e2e tests',
+                                                    description='e2e tests are running',
+                                                    target_url=get_jenkins_build_url(pr_number))
             if config.getoption('env') == 'sauce':
                 if not is_uploaded():
                     if 'http' in config.getoption('apk'):
@@ -187,7 +195,15 @@ def pytest_unconfigure(config):
             from github import Github
             repo = Github(github_token).get_user('status-im').get_repo('status-react')
             pull = repo.get_pull(int(config.getoption('pr_number')))
-            pull.create_issue_comment(github_report.build_html_report(testrail_report.run_id))
+            comment = pull.create_issue_comment(github_report.build_html_report(testrail_report.run_id))
+            if testrail_report.outcomes['undefined_fail']:
+                pull.get_commits()[0].create_status(state='failure', context='Mobile e2e tests',
+                                                    description='Failure - e2e tests are failed',
+                                                    target_url=comment.url)
+            else:
+                pull.get_commits()[0].create_status(state='success', context='Mobile e2e tests',
+                                                    description='Success - e2e tests are passed',
+                                                    target_url=comment.url)
 
 
 @pytest.mark.hookwrapper
