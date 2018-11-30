@@ -4,7 +4,7 @@
 
 (re-frame/reg-sub :pairing/installations
                   :<- [:get :pairing/installations]
-                  (fn [k]
-                    (->> k
-                         vals
-                         (filter :device-type))))
+                  (fn [installations]
+                    (->> installations
+                        vals
+                        (sort-by (comp unchecked-negate :last-paired)))))
