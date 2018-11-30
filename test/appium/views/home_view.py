@@ -121,7 +121,8 @@ class HomeView(BaseView):
     def add_contact(self, public_key):
         start_new_chat = self.plus_button.click()
         start_new_chat.start_new_chat_button.click_until_presence_of_element(start_new_chat.public_key_edit_box)
-        start_new_chat.public_key_edit_box.set_value(public_key)
+        start_new_chat.public_key_edit_box.click()
+        start_new_chat.public_key_edit_box.send_keys(public_key)
         one_to_one_chat = self.get_chat_view()
         start_new_chat.confirm_until_presence_of_element(one_to_one_chat.chat_message_input)
         return one_to_one_chat
