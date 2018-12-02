@@ -264,3 +264,13 @@
  :<- [:chats/current-chat]
  (fn [{:keys [metadata messages]}]
    (get messages (:responding-to-message metadata))))
+
+(re-frame/reg-sub
+ :chats/messages
+ :<- [::chats]
+ (fn [chats]
+   (reduce (fn [acc {:keys [messages message-statuses referenced-messages]}]
+             (let [messages (merge messages referenced-messages)]
+               (merge acc (chat.db/add-messages-statuses messages message-statuses))))
+           {}
+           (vals chats))))
