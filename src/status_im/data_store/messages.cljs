@@ -32,14 +32,14 @@
 (defn- get-references-by-ids
   [message-ids]
   (when (seq message-ids)
-    (keep (fn [{:keys [response-to response-to-new]}]
+    (keep (fn [{:keys [response-to response-to-v2]}]
             (when-let [js-message
-                       (if response-to-new
-                         (.objectForPrimaryKey @core/account-realm "message" response-to-new)
+                       (if response-to-v2
+                         (.objectForPrimaryKey @core/account-realm "message" response-to-v2)
                          (core/single (core/get-by-field
                                        @core/account-realm
                                        :message :old-message-id response-to)))]
-              [(or response-to-new response-to)
+              [(or response-to-v2 response-to)
                (-> js-message
                    (core/realm-obj->clj :message)
                    transform-message)]))

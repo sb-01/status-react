@@ -133,7 +133,7 @@
                                                                    :text    input-text}
                                                             message-id
                                                             (assoc :response-to old-message-id
-                                                                   :response-to-new message-id))})
+                                                                   :response-to-v2 message-id))})
                 (commands.input/set-command-reference nil)
                 (set-chat-input-text nil)
                 (process-cooldown)))))

@@ -164,13 +164,13 @@
                                               :from  from}}))))
 
 (defn check-response-to
-  [{{:keys [response-to response-to-new]} :content :as message}
+  [{{:keys [response-to response-to-v2]} :content :as message}
    old-id->message]
-  (if (and response-to (not response-to-new))
-    (let [response-to-new
+  (if (and response-to (not response-to-v2))
+    (let [response-to-v2
           (or (get-in old-id->message [response-to :message-id])
               (messages-store/get-message-id-by-old response-to))]
-      (assoc-in message [:content :response-to-new] response-to-new))
+      (assoc-in message [:content :response-to-v2] response-to-v2))
     message))
 
 (fx/defn add-received-message
